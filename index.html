@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yisroel Piekarski Music | One Man Band & DJ</title>
+<meta name="description" content="One Man Band & DJ for weddings, bar/bas mitzvahs and sheva brochós. Now offering lighting. Call or text 929-331-6708.">
+<link rel="icon" href="logo.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a1226;--card:#101c3a;--line:#2a3a64;--gold:#e0b567;--gold2:#f3d78f;--tx:#f2ede0;--mut:#a9b2cc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 Montserrat,sans-serif}
+h1,h2,h3{font-family:Cinzel,serif;color:var(--gold);margin:0 0 .5em;letter-spacing:.03em}
+.it{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.4em}
+a{color:var(--gold2)}.wrap{max-width:900px;margin:auto;padding:0 20px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0a1226ee;z-index:5}
+nav img{height:48px}nav div a{margin-left:16px;text-decoration:none;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase}
+.hero{text-align:center;padding:40px 0 20px}.hero img{max-width:520px;width:100%}
+.gold{background:linear-gradient(#f6dd9c,#c8963f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1{font-size:clamp(2rem,7vw,3.4rem)}
+.btn{display:inline-block;background:linear-gradient(#f3d78f,#c8963f);color:#0a1226;border:0;padding:13px 28px;border-radius:4px;font:600 .9rem Montserrat;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;cursor:pointer}
+.btn.o{background:none;color:var(--gold2);border:1px solid var(--gold)}.btn.s{padding:7px 14px;font-size:.75rem}
+section{padding:40px 0;border-top:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px}
+.light{text-align:center;background:radial-gradient(circle,#1b3a8a55,transparent 70%)}
+label{display:block;font-size:.8rem;color:var(--mut);margin:12px 0 4px;text-transform:uppercase;letter-spacing:.08em}
+input,select,textarea{width:100%;background:#0a1226;border:1px solid var(--line);color:var(--tx);padding:11px;border-radius:4px;font:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.row{grid-template-columns:1fr}nav div a{margin-left:9px}}
+.msg{padding:14px;border-radius:6px;background:#1c3a2a;margin:14px 0}
+footer{text-align:center;padding:30px;color:var(--mut);font-size:.8rem;border-top:1px solid var(--line)}
+.gig{cursor:pointer;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tag{font-size:.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--gold);color:var(--gold2)}.tag.p{background:#1c3a2a;border-color:#3b8a5c;color:#8fe0b0}
+#inv{display:none}
+@media print{body>*:not(#inv){display:none!important}#inv{display:block;background:#fff;color:#000;padding:30px}#inv h1,#inv h2{color:#000}}
+</style></head><body>
+<nav><a href="#/"><img src="logo.jpg" alt="Yisroel Piekarski Music"></a>
+<div><a href="#/">Home</a><a href="#/book">Book</a></div></nav>
+<main id="app"></main>
+<div id="inv"></div>
+<script>
+const PHONE="929-331-6708",BIZ="Yisroel Piekarski Music",TYPES=["Wedding","Bar Mitzvah","Bas Mitzvah","Sheva Brochós","Other"];
+const $=s=>document.querySelector(s),E=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const opts=a=>a.map(t=>`<option>${t}</option>`).join("");
+const fmtD=d=>d?new Date(d+"T12:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric",year:"numeric"}):"";
+const fmtT=t=>t?new Date("2000-01-01T"+t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"";
+let D={gigs:[],requests:[],cfg:{}},tok=sessionStorage.getItem("t")||"",loaded=false;
+const api=(a,b)=>fetch("/.netlify/functions/api?a="+a,{method:"POST",headers:{"content-type":"application/json","x-token":tok},body:JSON.stringify(b||{})}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw d;return d});
+const load=async()=>{D=await api("list");loaded=true};
+
+function home(){return `<div class="wrap"><div class="hero"><img src="logo.jpg" alt="${BIZ}"><h1 class="gold">One Man Band &amp; DJ</h1><div class="it">For All Your Simchas</div>
+<p style="margin:24px 0"><a class="btn" href="#/book">Check My Date</a> &nbsp; <a class="btn o" href="tel:${PHONE}">Call or Text ${PHONE}</a></p></div>
+<section><h2>Events</h2><div class="grid">${["Weddings","Bar/Bas Mitzvahs","Sheva Brochós"].map(x=>`<div class="card"><h3>${x}</h3><p style="color:var(--mut)">Live keyboard, full band sound and DJ, all from one professional.</p></div>`).join("")}</div></section>
+<section class="light"><div style="color:var(--mut);letter-spacing:.3em;font-size:.8rem">NOW OFFERING</div><h1 class="gold" style="font-size:3rem">LIGHTING</h1><div class="it">Make Your Event Unforgettable</div></section>
+<section><h2>Request Your Date</h2><a class="btn" href="#/book">Book Now</a></section></div><footer>© ${new Date().getFullYear()} ${BIZ} · <a href="tel:${PHONE}">${PHONE}</a></footer>`}
+
+function book(){return `<div class="wrap" style="padding-top:30px"><h2>Request a Date</h2><div id="bf"><form id="f">
+<div class="row"><div><label>Your name</label><input name="name" required></div><div><label>Phone</label><input name="phone" type="tel" required></div></div>
+<label>Email</label><input name="email" type="email">
+<div class="row"><div><label>Event type</label><select name="eventType">${opts(TYPES)}</select></div><div><label>Guests (approx.)</label><input name="guests" type="number" min="1"></div></div>
+<div class="row"><div><label>Date</label><input name="date" type="date" required min="${new Date().toISOString().slice(0,10)}"></div><div><label>Start time</label><input name="time" type="time"></div></div>
+<label>Venue / location</label><input name="location"><label>Interested in lighting?</label><select name="lighting"><option>No</option><option>Yes</option><option>Not sure</option></select>
+<label>Anything else?</label><textarea name="notes" rows="3"></textarea><input name="bot" style="display:none" tabindex="-1" autocomplete="off">
+<p><button class="btn">Send Request</button></p></form></div></div>`}
+
+function invHTML(g,p){return `<div class="wrap" style="padding-top:30px"><div class="card" style="background:#fff;color:#000"><h1 style="color:#000">INVOICE</h1><h3 style="color:#000">${BIZ}</h3><p>${PHONE}</p><hr>
+<p><b>Bill to:</b> ${E(g.client)}</p><p><b>Event:</b> ${E(g.type)}<br><b>Date:</b> ${fmtD(g.date)} ${fmtT(g.time)}<br><b>Location:</b> ${E(g.location)}</p>
+<p style="font-size:1.3rem"><b>Total: $${E(g.fee||0)}</b> ${g.lighting==="Yes"?"(includes lighting)":""}</p><p><b>Status:</b> ${g.paid?"PAID":"Unpaid"}</p>
+<p><b>Pay via:</b><br>${p.zelle?"Zelle: "+E(p.zelle)+"<br>":""}${p.cash?"Cash App: "+E(p.cash)+"<br>":""}${p.paypal?"PayPal: "+E(p.paypal):""}</p><p>Thank you!</p></div>
+<p><button class="btn" onclick="print()">Download / Print PDF</button></p></div>`}
+
+function admin(){
+ if(!tok)return `<div class="wrap" style="max-width:380px;padding-top:50px"><h2>Admin</h2><form id="lg"><label>Password</label><input id="pw" type="password" required><p><button class="btn">Enter</button></p></form></div>`;
+ const up=[...D.gigs].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)),today=new Date().toISOString().slice(0,10);
+ const row=g=>`<div class="card gig" data-id="${g.id}"><div><b>${E(g.client)}</b> · ${E(g.type)}<br><small style="color:var(--mut)">${fmtD(g.date)} ${fmtT(g.time)} · ${E(g.location)}</small></div><div>${g.fee?"$"+E(g.fee)+" ":""}<span class="tag ${g.paid?"p":""}">${g.paid?"Paid":"Unpaid"}</span></div></div>`;
+ const rq=r=>`<div class="card"><b>${E(r.name)}</b> · ${E(r.eventType)} · ${fmtD(r.date)} ${fmtT(r.time)}<br><small style="color:var(--mut)">${E(r.location)} · ${E(r.phone)} ${E(r.email)} · Guests ${E(r.guests)} · Lighting ${E(r.lighting)}<br>${E(r.notes)}</small><p style="margin:10px 0 0"><button class="btn s" data-ap="${r.id}">Approve</button> <button class="btn s o" data-dc="${r.id}">Decline</button></p></div>`;
+ return `<div class="wrap" style="padding-top:30px"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><h2>Gig Tracker</h2><div><button class="btn s" id="add">+ New Gig</button> <button class="btn s o" id="set">Settings</button> <button class="btn s o" id="out">Log out</button></div></div>
+ ${D.requests.length?`<h3>New Requests (${D.requests.length})</h3>${D.requests.map(rq).join("")}`:""}
+ <h3>Upcoming</h3>${up.filter(g=>g.date>=today).map(row).join("")||"<p style='color:var(--mut)'>None yet.</p>"}
+ <h3 style="margin-top:28px">Past</h3>${up.filter(g=>g.date<today).reverse().map(row).join("")||"<p style='color:var(--mut)'>None.</p>"}<div id="pane"></div></div>`}
+
+function gform(g={}){return `<div class="card" style="margin-top:20px"><h3>${g.id?"Gig Details":"New Gig"}</h3><form id="gf">
+<div class="row"><div><label>Client</label><input name="client" required value="${E(g.client)}"></div><div><label>Phone</label><input name="phone" value="${E(g.phone)}"></div></div>
+<div class="row"><div><label>Email</label><input name="email" value="${E(g.email)}"></div><div><label>Event type</label><select name="type">${opts(TYPES)}</select></div></div>
+<div class="row"><div><label>Date</label><input name="date" type="date" required value="${g.date||""}"></div><div><label>Start time</label><input name="time" type="time" value="${g.time||""}"></div></div>
+<label>Location</label><input name="location" value="${E(g.location)}">
+<div class="row"><div><label>Fee ($)</label><input name="fee" type="number" value="${E(g.fee)}"></div><div><label>Lighting?</label><select name="lighting"><option>No</option><option>Yes</option></select></div></div>
+<label>Notes</label><textarea name="notes" rows="3">${E(g.notes)}</textarea><label><input type="checkbox" name="paid" style="width:auto" ${g.paid?"checked":""}> Paid</label>
+<p><button class="btn s">Save</button> ${g.id?`<button type="button" class="btn s o" id="lnk">Copy invoice link</button> <button type="button" class="btn s o" id="del">Delete</button>`:""} <button type="button" class="btn s o" id="cx">Close</button></p></form></div>`}
+
+function wire(){
+ const f=$("#f");if(f)f.onsubmit=async e=>{e.preventDefault();try{await api("book",Object.fromEntries(new FormData(f)));$("#bf").innerHTML=`<div class="msg">Thank you! Your request was received. You'll hear back shortly. Need it sooner? Call or text <a href="tel:${PHONE}">${PHONE}</a>.</div>`}catch{alert("Couldn't send. Please call or text "+PHONE)}};
+ const lg=$("#lg");if(lg)lg.onsubmit=async e=>{e.preventDefault();try{tok=(await api("login",{password:$("#pw").value})).token;sessionStorage.setItem("t",tok);render()}catch{alert("Wrong password")}};
+ const o=$("#out");if(o)o.onclick=()=>{tok="";loaded=false;sessionStorage.removeItem("t");render()};
+ const open=g=>{$("#pane").innerHTML=gform(g);const gf=$("#gf");if(g.type)gf.type.value=g.type;if(g.lighting)gf.lighting.value=g.lighting;gf.scrollIntoView();
+  gf.onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(gf));d.paid=gf.paid.checked;if(g.id)d.id=g.id;await api("save",d);await load();render()};
+  $("#cx").onclick=()=>$("#pane").innerHTML="";
+  if(g.id){$("#lnk").onclick=()=>{navigator.clipboard.writeText(location.origin+"/#/invoice/"+g.id);alert("Invoice link copied")};$("#del").onclick=async()=>{if(confirm("Delete this gig?")){await api("del",{id:g.id});await load();render()}}}};
+ const a=$("#add");if(a)a.onclick=()=>open({});
+ document.querySelectorAll(".gig").forEach(c=>c.onclick=()=>open(D.gigs.find(g=>g.id===c.dataset.id)));
+ document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=async()=>{await api("approve",{id:b.dataset.ap});await load();render()});
+ document.querySelectorAll("[data-dc]").forEach(b=>b.onclick=async()=>{if(confirm("Decline and remove this request?")){await api("decline",{id:b.dataset.dc});await load();render()}});
+ const s=$("#set");if(s)s.onclick=()=>{const c=D.cfg;$("#pane").innerHTML=`<div class="card" style="margin-top:20px"><h3>Payment info (shown on invoices)</h3><form id="sf"><label>Zelle</label><input name="zelle" value="${E(c.zelle)}"><label>Cash App</label><input name="cash" value="${E(c.cash)}"><label>PayPal</label><input name="paypal" value="${E(c.paypal)}"><p><button class="btn s">Save</button></p></form></div>`;
+  $("#sf").onsubmit=async e=>{e.preventDefault();await api("cfg",Object.fromEntries(new FormData(e.target)));await load();render()}}}
+
+async function render(){const h=location.hash,app=$("#app");
+ if(h.startsWith("#/invoice/")){app.innerHTML=`<div class="wrap" style="padding-top:30px">Loading…</div>`;try{const d=await api("invoice",{id:h.slice(10)});app.innerHTML=invHTML(d.gig,d.pay)}catch{app.innerHTML=`<div class="wrap"><h2>Invoice not found</h2></div>`}return}
+ if(h.startsWith("#/admin")){if(tok&&!loaded){try{await load()}catch{tok="";sessionStorage.removeItem("t")}}app.innerHTML=admin()}
+ else app.innerHTML=h.startsWith("#/book")?book():home();
+ wire();scrollTo(0,0)}
+addEventListener("hashchange",render);render();
+</script></body></html>
