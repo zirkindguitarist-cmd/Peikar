@@ -36,6 +36,7 @@ footer{text-align:center;padding:30px;color:var(--mut);font-size:.8rem;border-to
 <div><a href="#/">Home</a><a href="#/book">Book</a></div></nav>
 <main id="app"></main>
 <div id="inv"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const PHONE="929-331-6708",BIZ="Yisroel Piekarski Music",TYPES=["Wedding","Bar Mitzvah","Bas Mitzvah","Sheva Brochós","Other"];
 const $=s=>document.querySelector(s),E=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -44,6 +45,25 @@ const fmtD=d=>d?new Date(d+"T12:00").toLocaleDateString(undefined,{weekday:"shor
 const fmtT=t=>t?new Date("2000-01-01T"+t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"";
 let D={gigs:[],requests:[],cfg:{}},tok=sessionStorage.getItem("t")||"",loaded=false;
 const api=(a,b)=>fetch("/.netlify/functions/api?a="+a,{method:"POST",headers:{"content-type":"application/json","x-token":tok},body:JSON.stringify(b||{})}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw d;return d});
+
+let LOGO="";fetch("logo.jpg").then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)}).catch(()=>{});
+function mkPDF(g,p){const d=new window.jspdf.jsPDF({unit:"pt",format:"letter"}),G=[200,150,63];
+ d.setFillColor(10,18,38);d.rect(0,0,612,150,"F");if(LOGO)try{d.addImage(LOGO,"JPEG",196,0,220,147)}catch{}
+ d.setFont("times","bold");d.setFontSize(26);d.setTextColor(10,18,38);d.text("INVOICE",50,200);
+ d.setDrawColor(...G);d.setLineWidth(1.5);d.line(50,212,562,212);
+ let y=245;const L=(a,b)=>{d.setFont("helvetica","bold");d.setFontSize(11);d.setTextColor(120,90,30);d.text(a,50,y);d.setFont("helvetica","normal");d.setTextColor(20,20,20);d.text(String(b||""),150,y);y+=22};
+ L("BILL TO",g.client);if(g.phone)L("PHONE",g.phone);if(g.email)L("EMAIL",g.email);y+=8;
+ L("EVENT",g.type);L("DATE",fmtD(g.date)+(g.time?"  "+fmtT(g.time):""));L("LOCATION",g.location);y+=10;
+ d.setDrawColor(200,200,200);d.line(50,y,562,y);y+=24;
+ d.setFont("helvetica","normal");d.setFontSize(12);d.text("One Man Band & DJ"+(g.lighting==="Yes"?" + Lighting":""),50,y);d.text("$"+(g.fee||0),562,y,{align:"right"});y+=18;d.line(50,y,562,y);y+=28;
+ d.setFont("helvetica","bold");d.setFontSize(15);d.text("Total due",50,y);d.text("$"+(g.fee||0),562,y,{align:"right"});y+=24;
+ d.setFontSize(11);d.setTextColor(...(g.paid?[40,140,80]:[180,50,50]));d.text(g.paid?"PAID":"UNPAID",50,y);y+=40;
+ d.setTextColor(120,90,30);d.text("PAY VIA",50,y);y+=20;d.setFont("helvetica","normal");d.setTextColor(20,20,20);
+ [["Zelle",p.zelle],["Cash App",p.cash],["PayPal",p.paypal]].forEach(([a,b])=>{if(b){d.text(a+": "+b,50,y);y+=18}});
+ d.setFont("times","italic");d.setFontSize(13);d.setTextColor(...G);d.text("Thank you! Yisroel Piekarski Music  ·  929-331-6708",306,730,{align:"center"});return d}
+async function shareInv(g,p,dl){const d=mkPDF(g,p),name=`Invoice-${(g.client||"client").replace(/[^\w]+/g,"-")}-${g.date||""}.pdf`;
+ const file=new File([d.output("blob")],name,{type:"application/pdf"});
+ if(!dl&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"Invoice",text:"Invoice from "+BIZ})}catch(e){if(e.name!=="AbortError")d.save(name)}}else d.save(name)}
 const load=async()=>{D=await api("list");loaded=true};
 
 function home(){return `<div class="wrap"><div class="hero"><img src="logo.jpg" alt="${BIZ}"><h1 class="gold">One Man Band &amp; DJ</h1><div class="it">For All Your Simchas</div>
@@ -65,7 +85,7 @@ function invHTML(g,p){return `<div class="wrap" style="padding-top:30px"><div cl
 <p><b>Bill to:</b> ${E(g.client)}</p><p><b>Event:</b> ${E(g.type)}<br><b>Date:</b> ${fmtD(g.date)} ${fmtT(g.time)}<br><b>Location:</b> ${E(g.location)}</p>
 <p style="font-size:1.3rem"><b>Total: $${E(g.fee||0)}</b> ${g.lighting==="Yes"?"(includes lighting)":""}</p><p><b>Status:</b> ${g.paid?"PAID":"Unpaid"}</p>
 <p><b>Pay via:</b><br>${p.zelle?"Zelle: "+E(p.zelle)+"<br>":""}${p.cash?"Cash App: "+E(p.cash)+"<br>":""}${p.paypal?"PayPal: "+E(p.paypal):""}</p><p>Thank you!</p></div>
-<p><button class="btn" onclick="print()">Download / Print PDF</button></p></div>`}
+<p><button class="btn" id="ipdf">Download PDF</button></p></div>`}
 
 function admin(){
  if(!tok)return `<div class="wrap" style="max-width:380px;padding-top:50px"><h2>Admin</h2><form id="lg"><label>Password</label><input id="pw" type="password" required><p><button class="btn">Enter</button></p></form></div>`;
@@ -84,7 +104,7 @@ function gform(g={}){return `<div class="card" style="margin-top:20px"><h3>${g.i
 <label>Location</label><input name="location" value="${E(g.location)}">
 <div class="row"><div><label>Fee ($)</label><input name="fee" type="number" value="${E(g.fee)}"></div><div><label>Lighting?</label><select name="lighting"><option>No</option><option>Yes</option></select></div></div>
 <label>Notes</label><textarea name="notes" rows="3">${E(g.notes)}</textarea><label><input type="checkbox" name="paid" style="width:auto" ${g.paid?"checked":""}> Paid</label>
-<p><button class="btn s">Save</button> ${g.id?`<button type="button" class="btn s o" id="lnk">Copy invoice link</button> <button type="button" class="btn s o" id="del">Delete</button>`:""} <button type="button" class="btn s o" id="cx">Close</button></p></form></div>`}
+<p><button class="btn s">Save</button> ${g.id?`<button type="button" class="btn s" id="pdfs">Send invoice PDF</button> <button type="button" class="btn s o" id="pdfd">Download PDF</button> <button type="button" class="btn s o" id="lnk">Copy invoice link</button> <button type="button" class="btn s o" id="del">Delete</button>`:""} <button type="button" class="btn s o" id="cx">Close</button></p></form></div>`}
 
 function wire(){
  const f=$("#f");if(f)f.onsubmit=async e=>{e.preventDefault();try{await api("book",Object.fromEntries(new FormData(f)));$("#bf").innerHTML=`<div class="msg">Thank you! Your request was received. You'll hear back shortly. Need it sooner? Call or text <a href="tel:${PHONE}">${PHONE}</a>.</div>`}catch{alert("Couldn't send. Please call or text "+PHONE)}};
@@ -93,7 +113,7 @@ function wire(){
  const open=g=>{$("#pane").innerHTML=gform(g);const gf=$("#gf");if(g.type)gf.type.value=g.type;if(g.lighting)gf.lighting.value=g.lighting;gf.scrollIntoView();
   gf.onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(gf));d.paid=gf.paid.checked;if(g.id)d.id=g.id;await api("save",d);await load();render()};
   $("#cx").onclick=()=>$("#pane").innerHTML="";
-  if(g.id){$("#lnk").onclick=()=>{navigator.clipboard.writeText(location.origin+"/#/invoice/"+g.id);alert("Invoice link copied")};$("#del").onclick=async()=>{if(confirm("Delete this gig?")){await api("del",{id:g.id});await load();render()}}}};
+  if(g.id){$("#pdfs").onclick=()=>shareInv(g,D.cfg);$("#pdfd").onclick=()=>shareInv(g,D.cfg,1);$("#lnk").onclick=()=>{navigator.clipboard.writeText(location.origin+"/#/invoice/"+g.id);alert("Invoice link copied")};$("#del").onclick=async()=>{if(confirm("Delete this gig?")){await api("del",{id:g.id});await load();render()}}}};
  const a=$("#add");if(a)a.onclick=()=>open({});
  document.querySelectorAll(".gig").forEach(c=>c.onclick=()=>open(D.gigs.find(g=>g.id===c.dataset.id)));
  document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=async()=>{await api("approve",{id:b.dataset.ap});await load();render()});
@@ -102,7 +122,7 @@ function wire(){
   $("#sf").onsubmit=async e=>{e.preventDefault();await api("cfg",Object.fromEntries(new FormData(e.target)));await load();render()}}}
 
 async function render(){const h=location.hash,app=$("#app");
- if(h.startsWith("#/invoice/")){app.innerHTML=`<div class="wrap" style="padding-top:30px">Loading…</div>`;try{const d=await api("invoice",{id:h.slice(10)});app.innerHTML=invHTML(d.gig,d.pay)}catch{app.innerHTML=`<div class="wrap"><h2>Invoice not found</h2></div>`}return}
+ if(h.startsWith("#/invoice/")){app.innerHTML=`<div class="wrap" style="padding-top:30px">Loading…</div>`;try{const d=await api("invoice",{id:h.slice(10)});app.innerHTML=invHTML(d.gig,d.pay);$("#ipdf").onclick=()=>shareInv(d.gig,d.pay,1)}catch{app.innerHTML=`<div class="wrap"><h2>Invoice not found</h2></div>`}return}
  if(h.startsWith("#/admin")){if(tok&&!loaded){try{await load()}catch{tok="";sessionStorage.removeItem("t")}}app.innerHTML=admin()}
  else app.innerHTML=h.startsWith("#/book")?book():home();
  wire();scrollTo(0,0)}
